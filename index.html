@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spotify Discord Status</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000; /* Amoled Black */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #ffffff;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Prevent dragging / selecting images & svg visuals */
+        img, svg {
+            -webkit-user-drag: none;
+            user-drag: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        :root {
+            --accent-color: 29, 185, 84; /* Default Spotify Green (RGB) */
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+            position: relative;
+        }
+
+        #glow-bg {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: rgba(var(--accent-color), 0.4);
+            filter: blur(80px);
+            z-index: -1;
+            transition: background 0.8s ease;
+            transform: scale(1);
+            will-change: transform;
+            pointer-events: none;
+        }
+
+        #play-button {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            border: 4px solid rgba(var(--accent-color), 0.3); /* Dimmer base border */
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 0 30px rgba(var(--accent-color), 0.2);
+            transition: border-color 0.8s ease, box-shadow 0.3s ease, transform 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-color: #111;
+            z-index: 2;
+        }
+
+        #progress-ring {
+            position: absolute;
+            width: 260px; /* Increased size to be further from the button */
+            height: 260px;
+            z-index: 3;
+            pointer-events: none;
+            transform: rotate(-90deg);
+        }
+
+        #progress-ring-circle {
+            transition: stroke-dashoffset 0.1s linear;
+            stroke-linecap: round;
+            stroke: #ffffff; /* Always white */
+        }
+
+        #play-button:active {
+            transform: scale(0.95);
+        }
+
+        #play-button.playing {
+            box-shadow: 0 0 50px rgba(var(--accent-color), 0.6);
+        }
+
+        #play-button.loading {
+            opacity: 0.5;
+            cursor: wait;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        #play-button:hover .overlay {
+            background: rgba(0,0,0,0.2);
+        }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            fill: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-text {
+            position: absolute;
+            bottom: 10%;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            line-height: 1.2;
+        }
+
+        /* Song / artist link styles — minimal clickable, animate color to white on hover (no underline) */
+        .status-text a {
+            color: rgba(255,255,255,0.86);
+            text-decoration: none;
+            pointer-events: auto;
+            padding: 0;
+            border-radius: 0;
+            transition: color 0.18s ease, opacity 0.15s ease;
+            font-weight: 400;
+            font-size: 0.92rem;
+            cursor: pointer;
+        }
+
+        .status-text a:hover {
+            color: #ffffff;
+            text-decoration: none;
+            opacity: 1;
+        }
+
+        .status-text .dash {
+            pointer-events: auto;
+            padding: 0 2px;
+            color: rgba(255,255,255,0.6);
+            cursor: default;
+            transition: opacity 0.12s ease;
+        }
+
+        /* Very subtle hover visual for the dash (no click) */
+        .status-text .dash:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="glow-bg"></div>
+        <div id="play-button-wrapper" style="position: relative; display: flex; justify-content: center; align-items: center;">
+            <svg id="progress-ring" class="hidden" viewBox="0 0 260 260">
+                <circle
+                    id="progress-ring-circle"
+                    stroke-width="6"
+                    fill="transparent"
+                    r="124"
+                    cx="130"
+                    cy="130"
+                />
+            </svg>
+            <div id="play-button" class="hidden">
+                <div class="overlay">
+                    <svg id="play-icon" class="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pause-icon" class="icon hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div id="status" class="status-text">Connecting to Lanyard...</div>
+        <div id="discord-mini" aria-hidden="true" style="position: absolute; bottom: 4%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap:8px; opacity: 0.9; pointer-events: none; font-size: 0.72rem; color: rgba(255,255,255,0.86);">
+            <div id="discord-mini-avatar" style="width:20px; height:20px; border-radius:4px; background:#222; background-size:cover; background-position:center; box-shadow: 0 1px 2px rgba(0,0,0,0.6);"></div>
+            <div id="discord-mini-name" style="opacity:0.95;">user</div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "lanyard": "https://esm.sh/@eggsydev/lanyard",
+            "colorthief": "https://esm.sh/colorthief@2.3.2"
+        }
+    }
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
